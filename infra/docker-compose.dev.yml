@@ -1,0 +1,63 @@
+services:
+  api:
+    build: ../api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../api:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - redis
+
+  sandbox-worker:
+    build: ../workers/sandbox
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../workers/sandbox:/app
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+  worker:
+    build:
+      context: ../workers/sandbox
+      dockerfile: Dockerfile
+    image: ndl-copilot-worker:dev
+    working_dir: /app
+    volumes:
+      - ../workers/sandbox:/app:rw
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+    command: ["python3", "runner.py"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import redis,sys; r=redis.Redis.from_url('redis://redis:6379'); r.ping() or sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # Resource limits (dev-friendly; `deploy` is used by swarm, mem_limit/cpus are supported by docker-compose)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    mem_limit: 512M
+    cpus: 0.5
+
+volumes:
+  redis-data:

@@ -1,0 +1,23 @@
+:root {
+  --good: #4caf50;
+  --warn: #ff9800;
+  --bad: #f44336;
+  --muted: #6b7280;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.score-label { width: 160px; color: var(--muted); }
+.score-value { width: 40px; text-align: right; font-weight: 600 }
+.bar { flex: 1; height: 10px; background: #eee; border-radius: 6px; overflow: hidden }
+.bar .fill { height: 100%; transition: width 240ms ease }
+.fill.good { background: linear-gradient(90deg, #66bb6a, #43a047) }
+.fill.warn { background: linear-gradient(90deg, #ffc107, #ff9800) }
+.fill.bad { background: linear-gradient(90deg, #ef5350, #e53935) }
+
+.metrics h3, .flags h3, .explanation h3 { margin-top: 12px }
+.report-json { background: #0b1220; color: #e6eef8; padding: 12px; border-radius: 6px; overflow: auto }
